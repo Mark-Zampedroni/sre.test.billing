@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing Extractor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <nav class="sidebar">
+            <div class="logo">
+                <span class="logo-text">BillExtract</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="dashboard">
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-view="upload">
+                    <span>Upload</span>
+                </li>
+                <li class="nav-item" data-view="pending">
+                    <span>Pending Review</span>
+                </li>
+                <li class="nav-item" data-view="confirmed">
+                    <span>Confirmed</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view active">
+                <header class="view-header">
+                    <h1>Dashboard</h1>
+                </header>
+                <div class="stats-grid" id="stats-container">
+                    <!-- Stats loaded dynamically -->
+                </div>
+                <div class="recent-section">
+                    <h2>Recent Uploads</h2>
+                    <div id="recent-billings"></div>
+                </div>
+            </div>
+
+            <!-- Upload View -->
+            <div id="view-upload" class="view">
+                <header class="view-header">
+                    <h1>Upload Billing</h1>
+                    <p class="subtitle">Upload PDF or image files to extract billing data</p>
+                </header>
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-content">
+                        <div class="upload-icon">+</div>
+                        <h3>Drop files here</h3>
+                        <p>or click to browse</p>
+                        <p class="upload-formats">Supports: PDF, JPG, PNG, GIF, TIFF</p>
+                    </div>
+                    <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff" multiple>
+                </div>
+                <div id="upload-progress" class="upload-progress hidden"></div>
+            </div>
+
+            <!-- Pending View -->
+            <div id="view-pending" class="view">
+                <header class="view-header">
+                    <h1>Pending Review</h1>
+                    <p class="subtitle">Review and confirm extracted billing data</p>
+                </header>
+                <div id="pending-list" class="billing-list"></div>
+            </div>
+
+            <!-- Confirmed View -->
+            <div id="view-confirmed" class="view">
+                <header class="view-header">
+                    <h1>Confirmed Billings</h1>
+                </header>
+                <div id="confirmed-list" class="billing-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>Edit Billing Data</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="edit-form-container">
+                <!-- Form loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="rejectBilling()">Reject</button>
+                <button class="btn btn-primary" onclick="saveBilling()">Save</button>
+                <button class="btn btn-success" onclick="confirmBilling()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
