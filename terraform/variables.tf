@@ -31,3 +31,29 @@ variable "certificate_arn" {
   type        = string
   default     = ""
 }
+
+# ECS Variables
+variable "container_cpu" {
+  description = "Container CPU units (1024 = 1 vCPU)"
+  type        = number
+  default     = 256
+}
+
+variable "container_memory" {
+  description = "Container memory (MB) - set low to trigger OOM for demo"
+  type        = number
+  default     = 512
+}
+
+variable "minimax_api_key" {
+  description = "MiniMax API key for image extraction"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "use_ecs" {
+  description = "Use ECS instead of EC2"
+  type        = bool
+  default     = true
+}
