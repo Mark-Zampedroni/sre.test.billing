@@ -301,43 +301,34 @@ def extract_with_ai(raw_text: str) -> dict:
 def process_images_in_pdf(pdf_path: str) -> dict:
     """
     Process images found in PDF for OCR extraction.
-    Collects all images first, then processes them for text recognition.
+    Streams images one at a time to avoid loading all pixel data into memory.
     """
     image_data = {"count": 0, "extracted_text": []}
-    
-    # Collect all images for batch processing
-    collected_images = []
-    
+
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages):
             if page.images:
                 for img_info in page.images:
                     # Extract image from PDF
                     x0, y0, x1, y1 = img_info["x0"], img_info["top"], img_info["x1"], img_info["bottom"]
-                    
+
                     # Crop page to image area and convert to PIL
                     cropped = page.within_bbox((x0, y0, x1, y1)).to_image(resolution=150)
                     pil_img = cropped.original
-                    
-                    # Convert to RGBA for consistent processing
-                    rgba_img = pil_img.convert("RGBA")
-                    
-                    # Store raw pixel data for OCR pipeline
-                    pixel_data = rgba_img.tobytes()
-                    collected_images.append({
-                        "page": page_num,
-                        "pixels": pixel_data,
-                        "size": rgba_img.size
-                    })
-                    
+
+                    # Record dimensions without storing raw pixel bytes in memory
+                    width, height = pil_img.size
                     image_data["count"] += 1
-    
-    # Process collected images (OCR would go here)
-    for idx, img_data in enumerate(collected_images):
-        image_data["extracted_text"].append(
-            f"Image {idx}: {img_data['size'][0]}x{img_data['size'][1]}"
-        )
-    
+
+                    # OCR would be invoked here per-image (streaming, not batched)
+                    image_data["extracted_text"].append(
+                        f"Image {image_data['count']}: {width}x{height} (page {page_num + 1})"
+                    )
+
+                    # Explicitly release the PIL image to free memory immediately
+                    del pil_img
+                    del cropped
+
     return image_data
 
 
