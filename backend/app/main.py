@@ -369,39 +369,33 @@ def extract_with_ai(raw_text: str) -> dict:
 def process_images_in_pdf(pdf_path: str) -> dict:
     """
     Process images found in PDF for OCR extraction.
-    Normalizes all images to standard size for consistent processing.
+    Streams images one at a time to avoid loading all pixel data into memory.
     """
     image_data = {"count": 0, "extracted_text": []}
-    
-    # Collect all images first for batch processing
-    normalized_images = []
-    STANDARD_SIZE = (2048, 2048)  # Standard size for AI model input
 
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages):
             if page.images:
                 for img_info in page.images:
                     x0, y0, x1, y1 = img_info["x0"], img_info["top"], img_info["x1"], img_info["bottom"]
-                    
-                    # Extract at high resolution for quality
-                    cropped = page.within_bbox((x0, y0, x1, y1)).to_image(resolution=300)
+
+                    # Extract at moderate resolution to keep memory usage bounded
+                    cropped = page.within_bbox((x0, y0, x1, y1)).to_image(resolution=150)
                     pil_img = cropped.original
-                    
-                    # Normalize to standard size for consistent AI input
-                    # (every image becomes 2048x2048 regardless of original size)
-                    normalized = pil_img.resize(STANDARD_SIZE, Image.Resampling.LANCZOS)
-                    
-                    # Store pixel data for batch processing
-                    img_array = list(normalized.convert("RGB").getdata())
-                    normalized_images.append(img_array)
-                    
+
+                    # Record dimensions without storing raw pixel bytes in memory
+                    width, height = pil_img.size
                     image_data["count"] += 1
+
+                    # OCR would be invoked here per-image (streaming, not batched)
                     image_data["extracted_text"].append(
-                        f"Image {image_data['count']}: {pil_img.size[0]}x{pil_img.size[1]} → normalized to {STANDARD_SIZE[0]}x{STANDARD_SIZE[1]} (page {page_num + 1})"
+                        f"Image {image_data['count']}: {width}x{height} (page {page_num + 1})"
                     )
 
-    # Process all normalized images (placeholder for future AI integration)
-    image_data["total_pixels"] = sum(len(img) for img in normalized_images)
+                    # Explicitly release the PIL image to free memory immediately
+                    del pil_img
+                    del cropped
+
     return image_data
 
 
