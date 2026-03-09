@@ -595,13 +595,12 @@ async def upload_billing(file: UploadFile = File(...)):
     # Generate billing ID
     billing_id = str(uuid.uuid4())[:8]
     
-    # Save uploaded file
+    # Save uploaded file using chunked streaming to avoid loading entire file into memory
     ext = Path(file.filename).suffix
     file_path = UPLOAD_DIR / f"{billing_id}{ext}"
-    content = await file.read()
-    
     with open(file_path, "wb") as f:
-        f.write(content)
+        while chunk := await file.read(1024 * 1024):  # 1 MB chunks
+            f.write(chunk)
     
     # Create placeholder billing record with "processing" status
     placeholder = BillingData(
