@@ -385,38 +385,22 @@ def process_images_in_pdf(pdf_path: str) -> dict:
         The returned metadata is appended to raw_text before AI extraction,
         helping the model understand the document structure even without OCR.
     """
-    image_data = {"count": 0, "extracted_text": [], "total_pixels": 0}
-    
-    # Collect normalized images for potential future batch OCR processing
-    normalized_images = []
-    STANDARD_SIZE = (2048, 2048)  # Standard size for consistent AI model input
+    image_data = {"count": 0, "extracted_text": []}
 
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages):
             if page.images:
                 for img_info in page.images:
                     x0, y0, x1, y1 = img_info["x0"], img_info["top"], img_info["x1"], img_info["bottom"]
-                    
-                    # Extract image at high resolution for quality analysis
-                    cropped = page.within_bbox((x0, y0, x1, y1)).to_image(resolution=300)
-                    pil_img = cropped.original
-                    original_size = pil_img.size
-                    
-                    # Normalize to standard size for consistent processing
-                    normalized = pil_img.resize(STANDARD_SIZE, Image.Resampling.LANCZOS)
-                    
-                    # Convert to RGB and store pixel data for batch processing
-                    img_array = list(normalized.convert("RGB").getdata())
-                    normalized_images.append(img_array)
-                    
+                    width = int(x1 - x0)
+                    height = int(y1 - y0)
+
                     # Record metadata for AI context
                     image_data["count"] += 1
                     image_data["extracted_text"].append(
-                        f"[Image {image_data['count']}] Page {page_num + 1}: {original_size[0]}x{original_size[1]}px"
+                        f"[Image {image_data['count']}] Page {page_num + 1}: {width}x{height}px"
                     )
 
-    # Calculate total pixels processed (for analytics/monitoring)
-    image_data["total_pixels"] = sum(len(img) for img in normalized_images)
     return image_data
 
 
